@@ -49,7 +49,6 @@ impl Config {
 
         Ok(account)
     }
-
     pub fn accounts(&self) -> Result<Vec<Account>, ConfigError> {
         let mut accounts = Vec::new();
         for account in &self.drive.accounts {

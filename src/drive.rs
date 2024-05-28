@@ -7,7 +7,7 @@ const CONCURRENCY: usize = 5;
 
 impl Atrain {
     async fn sync_drive(&self, drive_id: &str) -> Result<()> {
-        match self.bernard.sync_drive(drive_id).await {
+        match self.get_bernard().sync_drive(drive_id).await {
             // Do not send a payload to Autoscan on a full scan
             Ok(SyncKind::Full) => (),
             Ok(SyncKind::Partial(changes)) => {

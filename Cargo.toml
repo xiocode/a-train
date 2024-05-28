@@ -30,6 +30,7 @@ tower = { version = "0.4.8", features = ["full"] }
 tracing = "0.1"
 # Still waiting for https://github.com/tokio-rs/tracing/issues/1309 to be backported.
 tracing-subscriber = "0.2"
+rand = "0.8.4"
 
 # Jemalloc for 64-bit MUSL as standard allocator has bad performance.
 [target.'cfg(all(target_env = "musl", target_pointer_width = "64"))'.dependencies]

@@ -2,6 +2,8 @@ use autoscan::{Autoscan, AutoscanBuilder};
 use bernard::{Bernard, BernardBuilder};
 use reqwest::IntoUrl;
 use thiserror::Error;
+use rand::seq::SliceRandom;
+use rand::thread_rng;
 
 mod autoscan;
 mod config;
@@ -26,6 +28,7 @@ pub type Result<T> = std::result::Result<T, Error>;
 pub struct Atrain {
     autoscan: Autoscan,
     bernard: Bernard,
+    bernards: Vec<Bernard>,
     drives: Vec<String>,
 }
 
@@ -37,21 +40,34 @@ impl Atrain {
         sleep(Duration::from_secs(60)).await;
         Ok(())
     }
+
+    pub fn get_bernard(&self) -> &Bernard {
+        // randomly select a Bernard to use
+        self.bernards.choose(&mut thread_rng()).unwrap()
+    }
 }
 
 pub struct AtrainBuilder {
     autoscan: AutoscanBuilder,
+    bernards: Vec<BernardBuilder>,
     bernard: BernardBuilder,
     drives: Vec<String>,
 }
 
 impl AtrainBuilder {
     pub fn new(config: Config, database_path: &str) -> Result<AtrainBuilder> {
+        let mut bernards = Vec::new();
+        for account in config.accounts()? {
+            let bernard = Bernard::builder(database_path, account);
+            bernards.push(bernard);
+        }
         let account = config.account()?;
+        let bernard = Bernard::builder(database_path, account);
 
         Ok(Self {
             autoscan: Autoscan::builder(config.autoscan.url, config.autoscan.authentication),
-            bernard: Bernard::builder(database_path, account),
+            bernards,
+            bernard,
             drives: config.drive.drives,
         })
     }
@@ -63,13 +79,17 @@ impl AtrainBuilder {
     }
 
     pub async fn build(self) -> Result<Atrain> {
+        let bernards = futures::future::try_join_all(
+            self.bernards.into_iter().map(|bernard| bernard.build())
+        ).await.unwrap();
+
         let a_train = Atrain {
             autoscan: self.autoscan.build(),
             bernard: self.bernard.build().await.unwrap(),
             drives: self.drives,
+            bernards: bernards,
         };
 
-        // Check whether Autoscan is available.
         a_train.autoscan.available().await?;
         Ok(a_train)
     }

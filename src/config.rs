@@ -27,6 +27,7 @@ pub(crate) struct AutoscanConfig {
 #[derive(Debug, Deserialize)]
 pub(crate) struct DriveConfig {
     pub(crate) account: PathBuf,
+    pub(crate) accounts: Vec<PathBuf>,
     pub(crate) drives: Vec<String>,
 }
 
@@ -47,5 +48,16 @@ impl Config {
             .wrap_err_with(|| format!("Service Account is invalid: {:?}", self.drive.account))?;
 
         Ok(account)
+    }
+
+    pub fn accounts(&self) -> Result<Vec<Account>, ConfigError> {
+        let mut accounts = Vec::new();
+        for account in &self.drive.accounts {
+            let account = Account::from_file(account)
+                .wrap_err_with(|| format!("Service Account is invalid: {:?}", account))?;
+            accounts.push(account);
+        }
+
+        Ok(accounts)
     }
 }

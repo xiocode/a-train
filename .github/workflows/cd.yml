@@ -23,12 +23,6 @@ jobs:
           # linux/arm/v6
           - os: ubuntu-latest
             target: arm-unknown-linux-musleabihf
-          # MacOS: Intel (TODO: add Apple Silicon once Big Sur is available)
-          - os: macos-latest
-            target: x86_64-apple-darwin
-          # Windows
-          - os: windows-latest
-            target: x86_64-pc-windows-msvc
     steps:
       - name: Check out code
         uses: actions/checkout@v2
